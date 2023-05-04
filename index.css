@@ -20,6 +20,10 @@ body {
 
 .cell {
   background-color: rgb(84, 150, 88);
+  display: flex;
+  font-size: 3rem;
+  justify-content: center;
+  align-items: center;
   margin: 2px;
   width: 150px;
   height: 150px;
