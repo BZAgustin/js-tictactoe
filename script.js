@@ -1,4 +1,3 @@
-/* eslint-disable no-use-before-define */
 /* eslint-disable no-plusplus */
 
 // Gameboard Factory
@@ -29,14 +28,47 @@ const Gameboard = () => {
 }
 
 // Player Factory
-const Player = (marker) => {
-  const getMarker = () => marker;
+const Player = (playerMarker) => {
+  const getMarker = () => playerMarker;
 
   return { getMarker }
 }
 
-const game = Gameboard();
-const player1 = Player('X');
+// Display Controller
+const DisplayController = () => {
+  function hideOverlay() {
+    document.querySelector('.ol-container').style.display = 'none';
+  }
 
-console.log(game.board);
-console.log(player1.getMarker());
+  return { hideOverlay }
+}
+
+// Game Controller
+const GameController = () => {
+  const players = new Array(2);
+  const board = Gameboard();
+  const display = DisplayController();
+
+  function addPlayers(p1Shape, p2Shape) {
+    players[0] = Player(p1Shape);
+    players[1] = Player(p2Shape);
+  }
+
+  function selectShape() {
+    document.getElementById('x').addEventListener('click', () => {
+      addPlayers('X', 'O')
+      display.hideOverlay();
+    });
+
+    document.getElementById('o').addEventListener('click', () => {
+      addPlayers('O', 'X');
+      display.hideOverlay();
+    });
+  }
+  
+  return { players, board, selectShape }
+}
+
+
+const game = GameController();
+game.selectShape();
