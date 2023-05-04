@@ -1,3 +1,6 @@
+/* eslint-disable no-loop-func */
+/* eslint-disable prefer-destructuring */
+/* eslint-disable no-restricted-syntax */
 /* eslint-disable no-plusplus */
 
 // Gameboard Factory
@@ -8,9 +11,9 @@ const Square = () => {
     value = marker;
   };
 
-  const getValue = () => value;
+  const getMarker = () => value;
 
-  return { addMarker, getValue };
+  return { addMarker, getMarker };
 }
 
 const Gameboard = () => {
@@ -22,9 +25,11 @@ const Gameboard = () => {
 
   function placeMarker(index, playerMark) {
     board[index].addMarker(playerMark);
-  }  
+  }
+  
+  const getMarker = (index) => board[index].getMarker();
 
-  return { board, placeMarker };
+  return { board, placeMarker, getMarker };
 }
 
 // Player Factory
@@ -40,23 +45,39 @@ const DisplayController = () => {
     document.querySelector('.ol-container').style.display = 'none';
   }
 
-  return { hideOverlay }
+  function drawBoard(board) {
+    for(const cell of board) {
+      document.getElementById(`${board.indexOf(cell)}`).innerHTML = cell.getMarker();
+    }
+  }
+
+  return { hideOverlay, drawBoard }
 }
 
 // Game Controller
 const GameController = () => {
   const players = new Array(2);
-  const board = Gameboard();
+  const gameboard = Gameboard();
   const display = DisplayController();
+  let activePlayer;
 
   function addPlayers(p1Shape, p2Shape) {
     players[0] = Player(p1Shape);
     players[1] = Player(p2Shape);
+    activePlayer = players[0];
+  };
+
+  function switchActivePlayer() {
+    if(activePlayer === players[0]) {
+      activePlayer = players[1];
+    } else {
+      activePlayer = players[0];
+    }
   }
 
   function selectShape() {
     document.getElementById('x').addEventListener('click', () => {
-      addPlayers('X', 'O')
+      addPlayers('X', 'O');
       display.hideOverlay();
     });
 
@@ -65,10 +86,30 @@ const GameController = () => {
       display.hideOverlay();
     });
   }
-  
-  return { players, board, selectShape }
-}
 
+  function playerTurn(player, position) {
+    if(gameboard.getMarker(position) !== '') {
+      console.log('Cell is not empty!');
+    } else {
+      gameboard.placeMarker(position, player.getMarker());
+      display.drawBoard(gameboard.board);
+      switchActivePlayer();
+    }
+  }
+
+  function initCells() {
+    const board = gameboard.board;
+
+    for(const cell of board) {
+      document.getElementById(`${board.indexOf(cell)}`).addEventListener('click', () => {
+        playerTurn(activePlayer, board.indexOf(cell));
+      });
+    }
+  }
+  
+  return { players, gameboard, selectShape, initCells }
+}
 
 const game = GameController();
 game.selectShape();
+game.initCells();
