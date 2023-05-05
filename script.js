@@ -17,23 +17,24 @@ const Square = () => {
 }
 
 const Gameboard = () => {
-  const board = new Array(9);
+  const cells = new Array(9);
   
-  for(let i = 0; i < board.length; i++) {
-    board[i] = Square();
+  for(let i = 0; i < cells.length; i++) {
+    cells[i] = Square();
   }  
 
   function placeMarker(index, playerMark) {
-    board[index].addMarker(playerMark);
+    cells[index].addMarker(playerMark);
   }
   
-  const getMarker = (index) => board[index].getMarker();
+  const getMarker = (index) => cells[index].getMarker();
 
-  return { board, placeMarker, getMarker };
+  return { cells, placeMarker, getMarker };
 }
 
 // Player Factory
 const Player = (playerMarker) => {
+
   const getMarker = () => playerMarker;
 
   return { getMarker }
@@ -41,25 +42,45 @@ const Player = (playerMarker) => {
 
 // Display Controller
 const DisplayController = () => {
-  function hideOverlay() {
-    document.querySelector('.ol-container').style.display = 'none';
-  }
-
-  function drawBoard(board) {
-    for(const cell of board) {
-      document.getElementById(`${board.indexOf(cell)}`).innerHTML = cell.getMarker();
+  const toggleOverlay = () => {
+    if(document.querySelector('.ol-container').style.display === 'none') {
+      document.querySelector('.ol-container').style.display = 'flex';
+    } else {
+      document.querySelector('.ol-container').style.display = 'none'
     }
   }
 
-  return { hideOverlay, drawBoard }
+  const switchOverlay = () => {
+    if(document.querySelector('.overlay').style.display === 'none') {
+      document.querySelector('.overlay').style.display = 'flex';
+      document.querySelector('.overlay-2').style.display = 'none';
+    } else {
+      document.querySelector('.overlay').style.display = 'none';
+      document.querySelector('.overlay-2').style.display = 'flex';
+    }
+  }
+
+  const showEndScreen = (winner) => {
+    toggleOverlay();
+    document.querySelector('.overlay').style.display = 'none';
+    document.querySelector('.overlay-2').style.display = 'flex';
+    document.getElementById('winner').textContent = `The winner is ${winner}!`;
+  }
+
+  const drawCell = (board, index) => {
+    document.getElementById(`${index}`).innerHTML = board[index].getMarker();
+  }
+
+  return { toggleOverlay, switchOverlay, showEndScreen, drawCell }
 }
 
 // Game Controller
 const GameController = () => {
-  const players = new Array(2);
-  const gameboard = Gameboard();
+  let players = new Array(2);
+  let gameboard = Gameboard();
   const display = DisplayController();
   let activePlayer;
+  let winner;
 
   function addPlayers(p1Shape, p2Shape) {
     players[0] = Player(p1Shape);
@@ -78,13 +99,55 @@ const GameController = () => {
   function selectShape() {
     document.getElementById('x').addEventListener('click', () => {
       addPlayers('X', 'O');
-      display.hideOverlay();
+      display.toggleOverlay();
     });
 
     document.getElementById('o').addEventListener('click', () => {
       addPlayers('O', 'X');
-      display.hideOverlay();
+      display.toggleOverlay();
     });
+  }
+
+  // Returns the marker of the winner, or null if there is none
+  function checkWinner() { 
+    const board = gameboard.cells;
+
+    // Check rows
+    for(let i = 0; i < 9; i += 3) {
+      if(board[i].getMarker() !== '' &&
+         board[i].getMarker() === board[i+1].getMarker() &&
+         board[i+1].getMarker() === board[i+2].getMarker()) {
+          return board[i].getMarker();
+      }
+    }
+
+    // Check columns
+    for(let j = 0; j < 3; j++) {
+      if(board[j].getMarker() !== '' && 
+         board[j].getMarker() === board[j+3].getMarker() &&
+         board[j+3].getMarker() === board[j+6].getMarker()) {
+          return board[j].getMarker();
+         }
+    }
+
+    // Check diagonals
+    if(board[0].getMarker() !== '' &&
+       board[0].getMarker() === board[4].getMarker() &&
+       board[4].getMarker() === board[8].getMarker()) {
+        return board[0].getMarker();
+       }
+    
+    if(board[2].getMarker() !== '' &&
+       board[2].getMarker() === board[4].getMarker() &&
+       board[4].getMarker() === board[6].getMarker()) {
+        return board[2].getMarker();
+       }
+
+    return null;
+  }
+
+  function gameOver(player) {
+    display.showEndScreen(player.getMarker());
   }
 
   function playerTurn(player, position) {
@@ -92,22 +155,38 @@ const GameController = () => {
       console.log('Cell is not empty!');
     } else {
       gameboard.placeMarker(position, player.getMarker());
-      display.drawBoard(gameboard.board);
+      display.drawCell(gameboard.cells, position);
+      winner = checkWinner();
+      if(winner === players[0].getMarker()) {
+        gameOver(players[0]);
+      } else if (winner === players[1].getMarker()) {
+        gameOver(players[1]);
+      }
       switchActivePlayer();
     }
   }
 
   function initCells() {
-    const board = gameboard.board;
-
-    for(const cell of board) {
-      document.getElementById(`${board.indexOf(cell)}`).addEventListener('click', () => {
-        playerTurn(activePlayer, board.indexOf(cell));
+    for(const cell of gameboard.cells) {
+      document.getElementById(`${gameboard.cells.indexOf(cell)}`).addEventListener('click', () => {
+        playerTurn(activePlayer, gameboard.cells.indexOf(cell));
       });
     }
   }
+
+  function start() {
+    selectShape();
+    initCells();
+  }
+
+  // function restartGame() {
+
+  //   display.switchOverlay();
+  //   players = new Array(2);
+  //   gameboard = Gameboard();
+  // }
   
-  return { players, gameboard, selectShape, initCells }
+  return { players, gameboard, selectShape, start };
 }
 
 const game = GameController();
