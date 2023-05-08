@@ -77,7 +77,11 @@ const DisplayController = () => {
     toggleOverlay();
     overlay1.style.display = 'none';
     overlay2.style.display = 'flex';
-    document.getElementById('winner').textContent = `${winner} is the winner!`;
+    if(winner !== null) {
+      document.getElementById('winner').textContent = `${winner} is the winner!`;
+    } else {
+      document.getElementById('winner').textContent = `It's a draw! There is no winner`;
+    }
   }
 
   const clearBoard = () => {
@@ -105,6 +109,7 @@ const GameController = () => {
   const display = DisplayController();
   let activePlayer;
   let winner;
+  let round = 0;
 
   // Event handlers
   const cellHandler = (index) => {
@@ -173,14 +178,16 @@ const GameController = () => {
     return null;
   }
 
-  function gameOver(player) {
-    display.showEndScreen(player.getName());
+  function gameOver(player = null) {
+    if(player !== null) {
+      display.showEndScreen(player.getName());
+    } else {
+      display.showEndScreen(player);
+    }
   }
 
   function playerTurn(player, position) {
-    if(gameboard.getMarker(position) !== '') {
-      console.log('Cell is not empty!');
-    } else {
+    if(gameboard.getMarker(position) === '') {
       gameboard.placeMarker(position, player.getMarker());
       display.drawCell(gameboard.cells, position);
       winner = checkWinner();
@@ -188,7 +195,10 @@ const GameController = () => {
         gameOver(players[0]);
       } else if (winner === players[1].getMarker()) {
         gameOver(players[1]);
+      } else if (round === 8) {
+        gameOver();
       } else {
+        round += 1;
         switchActivePlayer();
       }
     }
@@ -213,6 +223,7 @@ const GameController = () => {
     players = new Array(2);
     gameboard = Gameboard();
     winner = null;
+    round = 0;
     clearListeners();
     start();
   }
