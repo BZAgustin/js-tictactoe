@@ -26,6 +26,12 @@ header {
   color: white;
   font-family: 'Rubik';
 }
+
+a {
+  text-decoration: none;
+  color: white;
+}
+
 .cell-container {
   display: grid;
   grid-template-columns: repeat(3, 1fr);
@@ -35,7 +41,7 @@ header {
 .cell {
   font-family: 'Darumadrop One';
   color: rgba(255, 255, 255);
-  background-color: rgba(17, 17, 17, 0.8);
+  background-color: rgba(17, 17, 17, 0.4);
   display: flex;
   font-size: 5rem;
   justify-content: center;
@@ -47,15 +53,38 @@ header {
 }
 
 .cell:hover {
-  background-color: rgba(0, 0, 0, 0.6);
+  background-color: rgba(0, 0, 0, 0.2);
   border: 1px solid rgba(255, 255, 255, 0.7);
   filter: drop-shadow(0px 0px 2px white);
   cursor: pointer;
 }
 
+footer {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
 footer, .overlay, .overlay-2, button {
   font-family: 'Rubik';
   color: white;
+}
+
+img {
+  width: 20px;
+  height: 20px;
+}
+
+#link, #github {
+  transition: 0.2s;
+}
+
+#github:hover {
+  filter:drop-shadow(1px 1px 0.5px black);
+}
+
+#link:hover {
+  filter:drop-shadow(0px 0px 1px white);
 }
 
 .ol-container {
