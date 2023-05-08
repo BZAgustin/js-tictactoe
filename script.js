@@ -1,3 +1,4 @@
+/* eslint-disable no-use-before-define */
 /* eslint-disable no-loop-func */
 /* eslint-disable prefer-destructuring */
 /* eslint-disable no-restricted-syntax */
@@ -21,7 +22,7 @@ const Gameboard = () => {
   
   for(let i = 0; i < cells.length; i++) {
     cells[i] = Square();
-  }  
+  }
 
   function placeMarker(index, playerMark) {
     cells[index].addMarker(playerMark);
@@ -42,36 +43,59 @@ const Player = (playerMarker) => {
 
 // Display Controller
 const DisplayController = () => {
+  const xButton = document.getElementById('x');
+  const oButton = document.getElementById('o');
+  const olContainer = document.querySelector('.ol-container');
+  const overlay1 = document.querySelector('.overlay');
+  const overlay2 = document.querySelector('.overlay-2');
+  const cellContainer = document.querySelector('.cell-container');
+  const cellDivs = new Array(9);
+
+  for(let i = 0; i < cellDivs.length; i++) {
+    cellDivs[i] = document.getElementById(`${i}`);
+  }
+
   const toggleOverlay = () => {
-    if(document.querySelector('.ol-container').style.display === 'none') {
-      document.querySelector('.ol-container').style.display = 'flex';
+    if(olContainer.style.display === 'none') {
+      olContainer.style.display = 'flex';
     } else {
-      document.querySelector('.ol-container').style.display = 'none'
+      olContainer.style.display = 'none';
     }
   }
 
   const switchOverlay = () => {
-    if(document.querySelector('.overlay').style.display === 'none') {
-      document.querySelector('.overlay').style.display = 'flex';
-      document.querySelector('.overlay-2').style.display = 'none';
+    if(overlay1.style.display === 'none') {
+      overlay1.style.display = 'grid';
+      overlay2.style.display = 'none';
     } else {
-      document.querySelector('.overlay').style.display = 'none';
-      document.querySelector('.overlay-2').style.display = 'flex';
+      overlay1.style.display = 'none';
+      overlay2.style.display = 'flex';
     }
   }
 
   const showEndScreen = (winner) => {
     toggleOverlay();
-    document.querySelector('.overlay').style.display = 'none';
-    document.querySelector('.overlay-2').style.display = 'flex';
+    overlay1.style.display = 'none';
+    overlay2.style.display = 'flex';
     document.getElementById('winner').textContent = `The winner is ${winner}!`;
   }
 
-  const drawCell = (board, index) => {
-    document.getElementById(`${index}`).innerHTML = board[index].getMarker();
+  const clearBoard = () => {
+    const board = document.querySelector('.cell-container').children;
+
+    for(const cell of board) {
+      cell.innerHTML = '';
+    }
   }
 
-  return { toggleOverlay, switchOverlay, showEndScreen, drawCell }
+  const drawCell = (board, index) => {
+    cellDivs[index].innerHTML = board[index].getMarker();
+  }
+
+  return { xButton, oButton, olContainer, 
+           overlay1, overlay2, cellDivs, 
+           cellContainer, toggleOverlay, switchOverlay, 
+           showEndScreen, clearBoard, drawCell };
 }
 
 // Game Controller
@@ -81,6 +105,21 @@ const GameController = () => {
   const display = DisplayController();
   let activePlayer;
   let winner;
+
+  // Event handlers
+  const cellHandler = (index) => {
+    playerTurn(activePlayer, index);
+  }
+
+  const xButtonHandler = () => {
+    addPlayers('X', 'O');
+    display.toggleOverlay();
+  }
+
+  const oButtonHandler = () => {
+    addPlayers('O', 'X');
+    display.toggleOverlay();
+  }
 
   function addPlayers(p1Shape, p2Shape) {
     players[0] = Player(p1Shape);
@@ -94,18 +133,6 @@ const GameController = () => {
     } else {
       activePlayer = players[0];
     }
-  }
-
-  function selectShape() {
-    document.getElementById('x').addEventListener('click', () => {
-      addPlayers('X', 'O');
-      display.toggleOverlay();
-    });
-
-    document.getElementById('o').addEventListener('click', () => {
-      addPlayers('O', 'X');
-      display.toggleOverlay();
-    });
   }
 
   // Returns the marker of the winner, or null if there is none
@@ -161,34 +188,50 @@ const GameController = () => {
         gameOver(players[0]);
       } else if (winner === players[1].getMarker()) {
         gameOver(players[1]);
+      } else {
+        switchActivePlayer();
       }
-      switchActivePlayer();
     }
   }
 
-  function initCells() {
+  function clearListeners() {
     for(const cell of gameboard.cells) {
-      document.getElementById(`${gameboard.cells.indexOf(cell)}`).addEventListener('click', () => {
-        playerTurn(activePlayer, gameboard.cells.indexOf(cell));
-      });
+      const index = gameboard.cells.indexOf(cell);
+      display.cellDivs[index].removeEventListener('click', cellHandler.bind(this, index));
     }
+  
+    display.xButton.removeEventListener('click', xButtonHandler);
+  
+    display.oButton.removeEventListener('click', oButtonHandler);
+    
+    document.getElementById('restart').removeEventListener('click', restartGame);
+  }
+ 
+  function restartGame() {
+    display.switchOverlay();
+    display.clearBoard();
+    players = new Array(2);
+    gameboard = Gameboard();
+    winner = null;
+    clearListeners();
+    start();
   }
 
   function start() {
-    selectShape();
-    initCells();
+    display.xButton.addEventListener('click', xButtonHandler);
+
+    display.oButton.addEventListener('click', oButtonHandler);
+
+    for(const cell of gameboard.cells) {
+      const index = gameboard.cells.indexOf(cell);
+      display.cellDivs[index].addEventListener('click', cellHandler.bind(this, index));
+    }
+    
+    document.getElementById('restart').addEventListener('click', restartGame);
   }
-
-  // function restartGame() {
-
-  //   display.switchOverlay();
-  //   players = new Array(2);
-  //   gameboard = Gameboard();
-  // }
   
-  return { players, gameboard, selectShape, start };
+  return { players, gameboard, start };
 }
 
 const game = GameController();
-game.selectShape();
-game.initCells();
+game.start();
