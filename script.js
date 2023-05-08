@@ -34,11 +34,11 @@ const Gameboard = () => {
 }
 
 // Player Factory
-const Player = (playerMarker) => {
-
+const Player = (playerName, playerMarker) => {
+  const getName = () => playerName;
   const getMarker = () => playerMarker;
 
-  return { getMarker }
+  return { getName, getMarker }
 }
 
 // Display Controller
@@ -77,7 +77,7 @@ const DisplayController = () => {
     toggleOverlay();
     overlay1.style.display = 'none';
     overlay2.style.display = 'flex';
-    document.getElementById('winner').textContent = `The winner is ${winner}!`;
+    document.getElementById('winner').textContent = `${winner} is the winner!`;
   }
 
   const clearBoard = () => {
@@ -112,18 +112,18 @@ const GameController = () => {
   }
 
   const xButtonHandler = () => {
-    addPlayers('X', 'O');
+    addPlayers('Player 1', 'X', 'Player 2', 'O');
     display.toggleOverlay();
   }
 
   const oButtonHandler = () => {
-    addPlayers('O', 'X');
+    addPlayers('Player 1', 'O', 'Player 2', 'X');
     display.toggleOverlay();
   }
 
-  function addPlayers(p1Shape, p2Shape) {
-    players[0] = Player(p1Shape);
-    players[1] = Player(p2Shape);
+  function addPlayers(p1Name, p1Shape, p2Name, p2Shape) {
+    players[0] = Player(p1Name, p1Shape);
+    players[1] = Player(p2Name, p2Shape);
     activePlayer = players[0];
   };
 
@@ -174,7 +174,7 @@ const GameController = () => {
   }
 
   function gameOver(player) {
-    display.showEndScreen(player.getMarker());
+    display.showEndScreen(player.getName());
   }
 
   function playerTurn(player, position) {
